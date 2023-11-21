@@ -1,0 +1,7 @@
+# IDE
+*.user
+.idea
+*.cbp
+.vs
+
+/out/
