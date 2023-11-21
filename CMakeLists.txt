@@ -4,8 +4,7 @@ project(yadro_tatlin_test_task)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(${CMAKE_PROJECT_NAME} main.cpp)
-
+add_executable(${CMAKE_PROJECT_NAME} main.cpp file_tape.cpp)
 
 if (MSVC)
     add_compile_options(/W4)
