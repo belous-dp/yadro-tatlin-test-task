@@ -4,7 +4,9 @@ project(yadro_tatlin_test_task)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(${CMAKE_PROJECT_NAME} main.cpp file_tape.cpp)
+add_executable(${CMAKE_PROJECT_NAME} main.cpp file_tape.cpp
+        tape_utils.cpp
+        tape_utils.h)
 add_executable(tests tests/tests.cpp file_tape.cpp)
 
 if (MSVC)
