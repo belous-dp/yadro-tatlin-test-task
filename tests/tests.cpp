@@ -229,3 +229,70 @@ TEST(file_tape, write_int_min) {
     std::getline(file, line);
     ASSERT_EQ(line, "-2147483648 -2147483648 -2147483648 ");
 }
+
+TEST(file_tape, big) {
+    auto filename = create_temp_file();
+    {
+        std::ofstream file(filename);
+        file << "                     42                                            1337                                     \n";
+    }
+    {
+        size_t size = 9;
+        file_tape tape(filename, size);
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_right());
+        ASSERT_TRUE(tape.read_safe().has_value());
+        EXPECT_EQ(tape.read_safe().value(), 42);
+        ASSERT_TRUE(tape.move_right());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_right());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_right());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_right());
+        ASSERT_TRUE(tape.read_safe().has_value());
+        EXPECT_EQ(tape.read_safe().value(), 1337);
+        ASSERT_TRUE(tape.move_right());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_right());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_right());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_FALSE(tape.move_right());
+        ASSERT_TRUE(tape.move_left());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_left());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_left());
+        ASSERT_TRUE(tape.read_safe().has_value());
+        EXPECT_EQ(tape.read_safe().value(), 1337);
+        ASSERT_TRUE(tape.move_left());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_left());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_left());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_TRUE(tape.move_left());
+        ASSERT_TRUE(tape.read_safe().has_value());
+        EXPECT_EQ(tape.read_safe().value(), 42);
+        ASSERT_TRUE(tape.move_left());
+        ASSERT_FALSE(tape.read_safe().has_value());
+        ASSERT_FALSE(tape.move_left());
+
+        for (size_t i = 0; i < size; ++i) {
+            tape.write(static_cast<int>(i));
+            for (size_t j = i + 1; j > 0; --j) {
+                ASSERT_TRUE(tape.read_safe().has_value());
+                EXPECT_EQ(tape.read(), static_cast<int>(j - 1));
+                EXPECT_EQ(tape.move_left(), (j != 1));
+            }
+            for (size_t j = 0; j <= i; ++j) {
+                EXPECT_EQ(tape.move_right(), (j + 1 < size));
+            }
+        }
+    }
+    std::ifstream file(filename);
+    std::string line;
+    std::getline(file, line);
+    ASSERT_EQ(line, "          0           1           2           3           4           5           6           7           8 ");
+}
