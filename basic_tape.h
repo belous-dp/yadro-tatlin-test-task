@@ -11,6 +11,9 @@ struct basic_tape {
     virtual bool move_left() const = 0; // NOLINT(*-use-nodiscard)
     virtual bool move_right() const = 0; // NOLINT(*-use-nodiscard)
     virtual ~basic_tape() = default;
+    virtual void rewind() const {
+        while (move_left());
+    }
 };
 
 

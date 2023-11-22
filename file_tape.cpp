@@ -1,13 +1,12 @@
 #include "file_tape.h"
 
-#include <cassert>
+#include <filesystem>
 #include <iostream>
 #include <limits>
-#include <filesystem>
 #include <vector>
 
 namespace {
-    void print_state(std::ostream& out, std::fstream& fs) {
+    [[maybe_unused]] void print_state(std::ostream& out, std::fstream& fs) {
         auto state_before = fs.rdstate();
         out << "good: " << (fs.good() ? "yes" : "no");
         if (fs.good()) {
@@ -101,4 +100,9 @@ bool file_tape::move_right() const {
     pos++;
     update_fstream_pos();
     return true;
+}
+
+void file_tape::rewind() const {
+    pos = 0;
+    update_fstream_pos();
 }

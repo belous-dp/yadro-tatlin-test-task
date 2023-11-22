@@ -18,6 +18,8 @@ public:
     bool move_left() const override;
     bool move_right() const override;
 
+    void rewind() const override;
+
 private:
     void update_fstream_pos() const;
 
