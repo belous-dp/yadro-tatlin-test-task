@@ -8,13 +8,15 @@
 
 class file_tape : public basic_tape {
 public:
-    explicit file_tape(std::string const& filename);
+    file_tape(std::string const& filename, size_t size);
 
     int read() const override;
+    std::optional<int> read_safe() const override;
+
     void write(int data) override;
 
-    void move_left() const override;
-    void move_right() const override;
+    bool move_left() const override;
+    bool move_right() const override;
 
 private:
     mutable std::fstream file;
