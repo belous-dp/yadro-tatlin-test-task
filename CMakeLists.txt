@@ -5,6 +5,7 @@ project(yadro_tatlin_test_task)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(${CMAKE_PROJECT_NAME} main.cpp file_tape.cpp)
+add_executable(tests tests/tests.cpp file_tape.cpp)
 
 if (MSVC)
     add_compile_options(/W4)
@@ -28,5 +29,8 @@ endif ()
 
 
 find_package(args REQUIRED)
+find_package(GTest REQUIRED)
 
 target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC taywee::args)
+target_link_libraries(tests PUBLIC GTest::gtest GTest::gtest_main)
+target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR})

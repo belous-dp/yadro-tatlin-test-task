@@ -2,6 +2,7 @@
   "name" : "yadro-tatlin-enrollment",
   "version-string" : "1.0.0",
   "dependencies" : [
-    "args"
+    "args",
+    "gtest"
   ]
 }
