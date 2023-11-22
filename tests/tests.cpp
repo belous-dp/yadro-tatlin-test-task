@@ -4,11 +4,11 @@
 
 namespace {
     std::string create_temp_file() {
-        static size_t cnt = 0;
-        cnt++;
         std::filesystem::path path("tmp");
+        path /= "testing";
         std::filesystem::create_directory(path);
-        path /= "test_tape" + std::to_string(cnt) + ".txt";
+        auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+        path /= std::string(test_info->test_suite_name()) + "__" + std::string(test_info->name()) + ".txt";
         std::ofstream{path}; // NOLINT(*-unused-raii)
         return path.string();
     }
@@ -41,14 +41,14 @@ TEST(file_tape, ctor_empty_file) {
     std::ifstream file(filename);
     std::string line;
     std::getline(file, line);
-    ASSERT_EQ(line, "                       ");
+    ASSERT_EQ(line, "                        ");
 }
 
 TEST(file_tape, ctor_partially_filled_file) {
     auto filename = create_temp_file();
     {
         std::ofstream file(filename);
-        file << "                     42\n";
+        file << "                     42            \n";
     }
     {
         file_tape tape(filename, 3);
@@ -200,14 +200,14 @@ TEST(file_tape, write_partially_filled) {
     std::ifstream file(filename);
     std::string line;
     std::getline(file, line);
-    ASSERT_EQ(line, "          0           0           7");
+    ASSERT_EQ(line, "          0           0           7 ");
 }
 
 TEST(file_tape, write_int_min) {
     auto filename = create_temp_file();
     {
         std::ofstream file(filename);
-        file << "                     42\n";
+        file << "                     42            \n";
     }
     const int int_min = std::numeric_limits<int>::min();
     {
@@ -227,5 +227,5 @@ TEST(file_tape, write_int_min) {
     std::ifstream file(filename);
     std::string line;
     std::getline(file, line);
-    ASSERT_EQ(line, "–2147483648 –2147483648 –2147483648");
+    ASSERT_EQ(line, "-2147483648 -2147483648 -2147483648 ");
 }

@@ -19,7 +19,14 @@ public:
     bool move_right() const override;
 
 private:
+    void update_fstream_pos() const;
+
+    static const uint8_t FILL_LEN;
+    static const std::string FILL_S;
+
     mutable std::fstream file;
+    mutable size_t pos;
+    const size_t size;
 };
 
 
