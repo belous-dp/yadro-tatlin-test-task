@@ -1,37 +1,13 @@
 #include "file_tape.h"
+#include "tape_algorithm.h"
 
-#include <iostream>
+#include <filesystem>
 
-namespace {
-    void sort(basic_tape const& src, basic_tape& dst) {
-
-    }
-}
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-//    file_tape abc("t1.txt");
-//    std::cout << abc.read() << std::endl;
-//    std::cout << abc.read() << std::endl;
-//    abc.move_left();
-//    std::cout << abc.read() << std::endl;
-//    abc.move_left();
-//    abc.move_left();
-//    std::cout << abc.read() << std::endl;
-//    abc.move_left();
-//    abc.move_left();
-//    abc.move_left();
-//    abc.move_left();
-//    std::cout << abc.read() << std::endl;
-//    std::cout << abc.read() << std::endl;
-//    std::cout << abc.read() << std::endl;
-//    abc.move_left();
-//    std::cout << abc.read() << std::endl;
-//    abc.move_left();
-//    abc.move_left();
-//    abc.move_left();
-//    std::cout << abc.read() << std::endl;
-//    abc.move_right();
-//    std::cout << abc.read() << std::endl;
-    return 0;
+    size_t n = 16;
+    file_tape src("src.txt", n);
+    std::ofstream{"dst.txt"};
+    file_tape dst("dst.txt", n);
+    sort(src, n, dst, 3);
 }
