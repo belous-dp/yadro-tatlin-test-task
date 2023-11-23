@@ -1,16 +1,33 @@
-#include <gtest/gtest.h>
+#include <file_tape.h>
 #include <filesystem>
-#include "file_tape.h"
+#include <gtest/gtest.h>
+#include <tape_algorithm.h>
+#include <random>
+
 
 namespace {
     std::string create_temp_file() {
+        static size_t cnt = 0;
+        cnt++;
         std::filesystem::path path("tmp");
         path /= "testing";
-        std::filesystem::create_directory(path);
+        std::filesystem::create_directories(path);
         auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        path /= std::string(test_info->test_suite_name()) + "__" + std::string(test_info->name()) + ".txt";
+        path /= std::string(test_info->test_suite_name()) + "__" + std::string(test_info->name()) +
+                "__" + std::to_string(cnt) + ".txt";
         std::ofstream{path}; // NOLINT(*-unused-raii)
         return path.string();
+    }
+
+    const uint8_t FILL_LEN = std::to_string(std::numeric_limits<int>::min()).size();
+
+    std::string file_tape_content_from_vec(std::vector<int> const& v) {
+        std::stringstream ss;
+        for (int i : v) {
+            ss << std::setw(FILL_LEN) << i << ' ';
+        }
+        ss << std::endl;
+        return ss.str();
     }
 
     struct file_tape_fixture : testing::Test {
@@ -320,3 +337,59 @@ TEST_F(file_tape_fixture, rewind) {
     EXPECT_EQ(tape->read(), 123);
     EXPECT_FALSE(tape->move_left());
 }
+
+namespace {
+    void test_sorted(std::vector<int> content, size_t cutoff) {
+        auto src_filename = create_temp_file();
+        {
+            std::ofstream file(src_filename);
+            file << file_tape_content_from_vec(content) << '\n';
+        }
+        auto dst_filename = create_temp_file();
+        {
+            auto size = content.size();
+            file_tape src(src_filename, size);
+            file_tape dst(dst_filename, size);
+            sort(src, size, dst, cutoff);
+        }
+        std::sort(content.begin(), content.end());
+        std::ifstream file(dst_filename);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        ASSERT_EQ(buffer.str(), file_tape_content_from_vec(content));
+    }
+}
+
+TEST(sort, one_elem) {
+    test_sorted({42}, 1);
+    test_sorted({42}, 2);
+}
+
+TEST(sort, simple) {
+    test_sorted({3, 4, 2, 9, 4, 8, 0, 8, 1, 8, 9, 2, 6, 4, 7, 5}, 3);
+}
+
+TEST(sort, simple_all_cutoffs) {
+    std::vector<int> content = {3, 4, 2, 9, 4, 8, 0, 8, 1, 8, 9, 2, 6, 4, 7, 5};
+    for (size_t cutoff = 1; cutoff <= content.size(); ++cutoff) {
+        std::cerr << "testing cutoff " << cutoff << std::endl;
+        test_sorted(content, cutoff);
+    }
+}
+
+TEST(sort, large) { // runs 67 seconds on an SSD
+    std::random_device rd;
+    std::default_random_engine gen(rd());
+    std::uniform_int_distribution<> distrib(-200, 200);
+
+    for (size_t count = 2; count < 150; ++count) {
+        std::vector<int> content(count);
+        for (int& i : content) {
+            i = distrib(gen);
+        }
+        for (size_t cutoff = 1; cutoff <= content.size(); ++cutoff) {
+            test_sorted(content, cutoff);
+        }
+    }
+}
+

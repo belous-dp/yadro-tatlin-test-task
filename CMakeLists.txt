@@ -5,7 +5,7 @@ project(yadro_tatlin_test_task)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(${CMAKE_PROJECT_NAME} main.cpp file_tape.cpp tape_utils.cpp tape_algorithm.cpp)
-add_executable(tests tests/tests.cpp file_tape.cpp)
+add_executable(tests tests/tests.cpp file_tape.cpp tape_utils.cpp tape_algorithm.cpp)
 
 if (MSVC)
     add_compile_options(/W4)

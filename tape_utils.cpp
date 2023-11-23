@@ -21,16 +21,16 @@ std::unique_ptr<basic_tape> create_temp_tape(size_t size) {
     return std::make_unique<file_tape>(path.string(), size);
 }
 
-void print_tape(const basic_tape &tape) {
+void print_tape(const basic_tape &tape, std::ostream& out) {
     tape.rewind();
-    std::cout << "tape = { ";
+    out << "tape = { ";
     do {
         auto v = tape.read_safe();
         if (v) {
-            std::cout << *v << ' ';
+            out << *v << ' ';
         } else {
-            std::cout << "_ ";
+            out << "_ ";
         }
     } while (tape.move_right());
-    std::cout << " }" << std::endl;
+    out << " }" << std::endl;
 }

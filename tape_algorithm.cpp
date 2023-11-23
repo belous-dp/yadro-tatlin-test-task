@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 namespace {
     void merge_sort(basic_tape const &src, size_t n_elems, size_t cutoff,
@@ -37,10 +38,16 @@ namespace {
                 if (i + 2 >= n_blocks) {
                     if (n_blocks % 2) {
                         left_block_size = n_elems % block_size;
+                        if (left_block_size == 0) {
+                            left_block_size = block_size;
+                        }
                         right_block_size = 0;
                     } else {
                         left_block_size = block_size;
                         right_block_size = n_elems % block_size;
+                        if (right_block_size == 0) {
+                            right_block_size = block_size;
+                        }
                     }
                 } else {
                     left_block_size = right_block_size = block_size;
@@ -107,6 +114,6 @@ void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff) {
         merge_sort(src, count, cutoff, tt2.get(), tt1.get(), &dst, tt3.get());
     }
 
-    print_tape(dst);
+//    print_tape(dst, std::cerr);
     dst.rewind();
 }
