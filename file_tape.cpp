@@ -47,7 +47,6 @@ file_tape::file_tape(std::string const& filename, size_t size) : file(filename),
         file.seekg(0, std::ios::beg);
         file.seekp(0, std::ios::beg);
     }
-    update_fstream_pos();
 }
 
 void file_tape::update_fstream_pos() const {
@@ -58,15 +57,15 @@ void file_tape::update_fstream_pos() const {
 
 int file_tape::read() const {
     int res;
-    file >> res; // what if failed? https://cplusplus.com/reference/istream/istream/operator%3E%3E/
     update_fstream_pos();
+    file >> res; // what if failed? https://cplusplus.com/reference/istream/istream/operator%3E%3E/
     return res;
 }
 
 std::optional<int> file_tape::read_safe() const {
     char buf[FILL_LEN];
-    file.read(buf, FILL_LEN);
     update_fstream_pos();
+    file.read(buf, FILL_LEN);
     std::string s(buf, FILL_LEN); // maybe file >> std::noskipws >> std::setw(FILL_LEN + 1) >> s?
     try {
         int res = std::stoi(s);
@@ -80,8 +79,8 @@ std::optional<int> file_tape::read_safe() const {
 }
 
 void file_tape::write(int data) {
-    file << std::setw(FILL_LEN) << data << ' '; // todo error handling
     update_fstream_pos();
+    file << std::setw(FILL_LEN) << data << ' '; // todo error handling
 }
 
 bool file_tape::move_left() const {
@@ -89,7 +88,6 @@ bool file_tape::move_left() const {
         return false;
     }
     pos--;
-    update_fstream_pos();
     return true;
 }
 
@@ -98,11 +96,9 @@ bool file_tape::move_right() const {
         return false;
     }
     pos++;
-    update_fstream_pos();
     return true;
 }
 
 void file_tape::rewind() const {
     pos = 0;
-    update_fstream_pos();
 }

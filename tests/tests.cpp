@@ -403,7 +403,7 @@ TEST(large, sort) { // runs ~61 seconds on an SSD
     test_sorted_subsequent_random(15, 150, -200, 200);
 }
 
-TEST(large, big_file) { // runs ~57 seconds on an SSD
+TEST(large, big_file) { // runs ~53 seconds on an SSD
     std::random_device rd;
     std::default_random_engine gen(rd());
     std::uniform_int_distribution<> distrib(-10000, 100000);
