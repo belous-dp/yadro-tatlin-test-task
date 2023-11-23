@@ -1,15 +1,13 @@
 #include "vector_tape.h"
-
 #include <stdexcept>
 
-
-[[maybe_unused]] vector_tape::vector_tape(size_t size) : v(size), empty(size, true) {
+vector_tape::vector_tape(size_t size) : v(size), empty(size, true) {
     if (size == 0) {
         throw std::invalid_argument("size of a tape cannot be zero");
     }
 }
 
-[[maybe_unused]] vector_tape::vector_tape(std::vector<int> content) : v(std::move(content)), empty(0) {
+vector_tape::vector_tape(std::vector<int> content) : v(std::move(content)), empty(0) {
     if (v.empty()) {
         throw std::invalid_argument("size of a tape cannot be zero");
     }

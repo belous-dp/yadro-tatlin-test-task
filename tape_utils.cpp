@@ -1,5 +1,6 @@
 #include "file_tape.h"
 #include "tape_utils.h"
+#include "vector_tape.h"
 
 #include <filesystem>
 #include <iostream>
@@ -13,7 +14,7 @@ void bulk_write(std::vector<int> const& data, basic_tape& tape) {
     }
 }
 
-std::unique_ptr<basic_tape> create_temp_tape(size_t size) {
+std::unique_ptr<basic_tape> create_temp_file_tape(size_t size) {
     static size_t cnt = 0;
     cnt++;
     std::filesystem::path path("tmp");
@@ -21,6 +22,10 @@ std::unique_ptr<basic_tape> create_temp_tape(size_t size) {
     path /= "tape" + std::to_string(cnt) + ".txt";
     std::ofstream{path};
     return std::make_unique<file_tape>(path.string(), size);
+}
+
+std::unique_ptr<basic_tape> create_temp_vector_tape(size_t size) {
+    return std::make_unique<vector_tape>(size);
 }
 
 void print_tape(const basic_tape &tape, std::ostream& out) {

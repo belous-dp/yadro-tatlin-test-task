@@ -4,10 +4,10 @@
 #include "basic_tape.h"
 #include <vector>
 
-class [[maybe_unused]] vector_tape : basic_tape {
+class vector_tape : public basic_tape {
 public:
-    [[maybe_unused]] explicit vector_tape(size_t size);
-    [[maybe_unused]] explicit vector_tape(std::vector<int> content);
+    explicit vector_tape(size_t size);
+    explicit vector_tape(std::vector<int> content);
 
     int read() const override;
     std::optional<int> read_safe() const override;

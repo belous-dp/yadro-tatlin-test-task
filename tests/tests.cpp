@@ -1,8 +1,10 @@
-#include <file_tape.h>
 #include <filesystem>
 #include <gtest/gtest.h>
-#include <tape_algorithm.h>
 #include <random>
+#include <file_tape.h>
+#include <tape_algorithm.h>
+#include <tape_utils.h>
+#include <vector_tape.h>
 
 
 namespace {
@@ -350,7 +352,7 @@ namespace {
             auto size = content.size();
             file_tape src(src_filename, size);
             file_tape dst(dst_filename, size);
-            sort(src, size, dst, cutoff);
+            sort(src, size, dst, cutoff, create_temp_file_tape);
         }
         std::sort(content.begin(), content.end());
         std::ifstream file(dst_filename);
@@ -415,3 +417,27 @@ TEST(large, big_file) { // runs ~53 seconds on an SSD
     test_sorted(content, 100);
 }
 
+TEST(sort, vector_tapes) {
+    std::random_device rd;
+    std::default_random_engine gen(rd());
+    std::uniform_int_distribution<> distrib(-10000, 10000);
+
+    std::vector<int> content(300000);
+    for (int& i : content) {
+        i = distrib(gen);
+    }
+
+    vector_tape src(content);
+    vector_tape dst(content);
+    sort(src, content.size(), dst, 100, create_temp_vector_tape);
+
+    std::vector<int> res(content.size());
+    dst.rewind();
+    for (int& i : res) {
+        i = dst.read();
+        dst.move_right();
+    }
+
+    std::sort(content.begin(), content.end());
+    ASSERT_EQ(res, content);
+}

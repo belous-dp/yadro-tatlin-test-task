@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 
 namespace {
     void merge(basic_tape const* src1, basic_tape const* src2,
@@ -118,12 +117,12 @@ namespace {
     }
 }
 
-void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff) {
+void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff, tape_factory factory) {
     assert(cutoff > 0 && count > 0);
 
-    auto tt1 = create_temp_tape(count);
-    auto tt2 = create_temp_tape(count);
-    auto tt3 = create_temp_tape(count);
+    auto tt1 = factory(count);
+    auto tt2 = factory(count);
+    auto tt3 = factory(count);
 
     split_tape(src, count, cutoff, &dst, tt1.get());
     size_t n_steps = merge_sort(count, cutoff, &dst, tt1.get(), tt2.get(), tt3.get());
@@ -135,6 +134,4 @@ void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff) {
             dst.move_right();
         }
     }
-
-//    print_tape(dst, std::cerr);
 }
