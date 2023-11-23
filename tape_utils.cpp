@@ -5,9 +5,11 @@
 #include <iostream>
 
 void bulk_write(std::vector<int> const& data, basic_tape& tape) {
-    for (int i : data) {
-        tape.write(i);
-        tape.move_right();
+    for (size_t i = 0; i < data.size(); ++i) {
+        tape.write(data[i]);
+        if (i + 1 < data.size()) {
+            tape.move_right();
+        }
     }
 }
 
