@@ -6,28 +6,12 @@
 #include <iostream>
 
 namespace {
-    void merge_sort(basic_tape const &src, size_t n_elems, size_t cutoff,
-                    basic_tape *tape1, basic_tape *tape2,
-                    basic_tape *tape3, basic_tape *tape4) {
-        size_t n_blocks = 0;
-        std::vector<int> mem(cutoff);
-        for (size_t i = 0; i < n_elems; i += cutoff, ++n_blocks) {
-            for (size_t j = 0; j < cutoff && i + j < n_elems; ++j) {
-                mem[j] = src.read();
-                src.move_right();
-            }
-            if (i + cutoff >= n_elems) {
-                mem.resize(n_elems - i);
-            }
-            std::sort(mem.begin(), mem.end());
-            if (n_blocks % 2 == 0) {
-                bulk_write(mem, *tape1);
-            } else {
-                bulk_write(mem, *tape2);
-            }
-        }
+    void merge_sort(size_t n_elems, size_t cutoff,
+                    basic_tape* tape1, basic_tape* tape2,
+                    basic_tape* tape3, basic_tape* tape4) {
 
         size_t block_size = cutoff;
+        size_t n_blocks = (n_elems + cutoff - 1) / cutoff;
         while (block_size < n_elems) { // log(n) merges
             tape1->rewind();
             tape2->rewind();
@@ -35,7 +19,7 @@ namespace {
             tape4->rewind();
             for (size_t i = 0; i < n_blocks; i += 2) { // merge two blocks from parallel tapes
                 size_t left_block_size, right_block_size;
-                if (i + 2 >= n_blocks) {
+                if (i + 2 >= n_blocks) { // last layer
                     if (n_blocks % 2) {
                         left_block_size = n_elems % block_size;
                         if (left_block_size == 0) {
@@ -53,7 +37,7 @@ namespace {
                     left_block_size = right_block_size = block_size;
                 }
 
-                basic_tape &res = (i % 4 == 0 ? *tape3 : *tape4); // store result in one of next-step tapes
+                basic_tape& res = (i % 4 == 0 ? *tape3 : *tape4); // store result in one of next-step tapes
 
                 // basic merge
                 for (size_t left = 0, right = 0; left < left_block_size || right < right_block_size;) {
@@ -90,6 +74,24 @@ namespace {
             n_blocks = (n_blocks + 1) / 2;
         }
     }
+
+    void split_tape(basic_tape const& src, size_t n_elems, size_t cutoff,
+                    basic_tape* dst1, basic_tape* dst2) {
+        size_t n_blocks = 0;
+        std::vector<int> mem(cutoff);
+        for (size_t i = 0; i < n_elems; i += cutoff, ++n_blocks) {
+            for (size_t j = 0; j < cutoff && i + j < n_elems; ++j) {
+                mem[j] = src.read();
+                src.move_right();
+            }
+            if (i + cutoff >= n_elems) {
+                mem.resize(n_elems - i);
+            }
+            std::sort(mem.begin(), mem.end());
+            bulk_write(mem, *dst1);
+            std::swap(dst1, dst2);
+        }
+    }
 }
 
 void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff) {
@@ -106,13 +108,14 @@ void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff) {
     auto tt2 = create_temp_tape(count);
     auto tt3 = create_temp_tape(count);
 
-    if (n_steps % 2) {
-        merge_sort(src, count, cutoff, &dst, tt1.get(), tt2.get(), tt3.get());
-    } else {
-        // sorted data will be stored in tt2
-        // we want tt2 to be dst
-        merge_sort(src, count, cutoff, tt2.get(), tt1.get(), &dst, tt3.get());
+    auto* tape1 = &dst;
+    auto* tape3 = tt2.get();
+    if (n_steps % 2 == 0) {
+        // sorted data will be stored in tape3 => we want tape3 to point at dst
+        std::swap(tape1, tape3);
     }
+    split_tape(src, count, cutoff, tape1, tt1.get());
+    merge_sort(count, cutoff, tape1, tt1.get(), tape3, tt3.get());
 
 //    print_tape(dst, std::cerr);
     dst.rewind();

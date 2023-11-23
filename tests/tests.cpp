@@ -15,7 +15,7 @@ namespace {
         auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
         path /= std::string(test_info->test_suite_name()) + "__" + std::string(test_info->name()) +
                 "__" + std::to_string(cnt) + ".txt";
-        std::ofstream{path}; // NOLINT(*-unused-raii)
+        std::ofstream{ path }; // NOLINT(*-unused-raii)
         return path.string();
     }
 
@@ -361,35 +361,45 @@ namespace {
 }
 
 TEST(sort, one_elem) {
-    test_sorted({42}, 1);
-    test_sorted({42}, 2);
+    test_sorted({ 42 }, 1);
+    test_sorted({ 42 }, 2);
 }
 
 TEST(sort, simple) {
-    test_sorted({3, 4, 2, 9, 4, 8, 0, 8, 1, 8, 9, 2, 6, 4, 7, 5}, 3);
+    test_sorted({ 3, 4, 2, 9, 4, 8, 0, 8, 1, 8, 9, 2, 6, 4, 7, 5 }, 3);
 }
 
 TEST(sort, simple_all_cutoffs) {
-    std::vector<int> content = {3, 4, 2, 9, 4, 8, 0, 8, 1, 8, 9, 2, 6, 4, 7, 5};
+    std::vector<int> content = { 3, 4, 2, 9, 4, 8, 0, 8, 1, 8, 9, 2, 6, 4, 7, 5 };
     for (size_t cutoff = 1; cutoff <= content.size(); ++cutoff) {
         std::cerr << "testing cutoff " << cutoff << std::endl;
         test_sorted(content, cutoff);
     }
 }
 
-TEST(sort, large) { // runs 67 seconds on an SSD
-    std::random_device rd;
-    std::default_random_engine gen(rd());
-    std::uniform_int_distribution<> distrib(-200, 200);
+namespace {
+    void test_sorted_subsequent_random(size_t start_count, size_t stop_count, int min_val, int max_val) {
+        std::random_device rd;
+        std::default_random_engine gen(rd());
+        std::uniform_int_distribution<> distrib(min_val, max_val);
 
-    for (size_t count = 2; count < 150; ++count) {
-        std::vector<int> content(count);
-        for (int& i : content) {
-            i = distrib(gen);
-        }
-        for (size_t cutoff = 1; cutoff <= content.size(); ++cutoff) {
-            test_sorted(content, cutoff);
+        for (size_t count = start_count; count < stop_count; ++count) {
+            std::vector<int> content(count);
+            for (int& i : content) {
+                i = distrib(gen);
+            }
+            for (size_t cutoff = 1; cutoff <= content.size(); ++cutoff) {
+                test_sorted(content, cutoff);
+            }
         }
     }
+}
+
+TEST(sort, small) {
+    test_sorted_subsequent_random(2, 15, -20, 20);
+}
+
+TEST(large, sort) { // runs 61 seconds on an SSD
+    test_sorted_subsequent_random(15, 150, -200, 200);
 }
 
