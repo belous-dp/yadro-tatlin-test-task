@@ -372,7 +372,7 @@ TEST(sort, simple) {
 TEST(sort, simple_all_cutoffs) {
     std::vector<int> content = { 3, 4, 2, 9, 4, 8, 0, 8, 1, 8, 9, 2, 6, 4, 7, 5 };
     for (size_t cutoff = 1; cutoff <= content.size(); ++cutoff) {
-        std::cerr << "testing cutoff " << cutoff << std::endl;
+        std::cout << "testing cutoff " << cutoff << std::endl;
         test_sorted(content, cutoff);
     }
 }
@@ -401,5 +401,17 @@ TEST(sort, small) {
 
 TEST(large, sort) { // runs 61 seconds on an SSD
     test_sorted_subsequent_random(15, 150, -200, 200);
+}
+
+TEST(large, big_file) { // runs 17.238 sec
+    std::random_device rd;
+    std::default_random_engine gen(rd());
+    std::uniform_int_distribution<> distrib(-10000, 100000);
+
+    std::vector<int> content(100000);
+    for (int& i : content) {
+        i = distrib(gen);
+    }
+    test_sorted(content, 100);
 }
 
