@@ -19,26 +19,33 @@ A utility for sorting tapes with numbers. Tapes are simulated using regular text
                                         stdout
       input                             Path to the file that emulates input
                                         tape.
-      count                             Number of elements to sort.
+      count                             Number of elements to sort. Cannot be
+                                        zero.
       -c[cutoff], --cutoff=[cutoff]     The number of elements that can be
-                                        sorted in RAM.
+                                        sorted in RAM. This number can be less
+                                        than 'count' but cannot be zero.The
+                                        default value is 1e7.
       -o[output], --output=[output],
       --dst=[output]                    Path to the output tape. It either
                                         should be correct tape or should be an
                                         empty file,or should point to the
-                                        desired location of the output tape.
+                                        desired location of the output tape. The
+                                        default value is 'sorted_tape.txt'.
       --config=[config], --cfg=[config] Path to the file tapes config file or to
                                         the desired location where to create it.
+                                        The default value is 'file_tape.cfg'.
       "--" can be used to terminate flag options and force all following
       arguments to be treated as positional options
-
 ```
+
+> for reviewers: in terms of the statement.pdf N=count, M=cutoff.
 
 # Internals
 
 Uses modified iterative merge sort algorithm. Splits src into two blocks, stores them on two tapes, 
 then merges blocks on these two tapes into blocks of x2 size and stores them onto other two tapes.
-To optimize rewinding, alternates between storing blocks in ascending and descending order.
+To optimize rewinding, alternates between storing blocks in ascending and descending order. 
+For more information, see [tape_algorithm.cpp](tape_algorithm.cpp).
 
 # Notes
 Tested on Windows + MinGW-64 (by msys2).

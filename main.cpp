@@ -14,17 +14,22 @@ int main(int argc, char* argv[]) {
     args::Flag print(parser, "print", "Whether to print the output tape to stdout", { 'p', "print" });
     args::Positional<std::string> input(parser, "input", "Path to the file that emulates input tape.",
                                         args::Options::Required);
-    args::Positional<size_t> size(parser, "count", "Number of elements to sort.",
+    args::Positional<size_t> size(parser, "count", "Number of elements to sort. Cannot be zero.",
                                   args::Options::Required);
     args::ValueFlag<size_t> cutoff(parser, "cutoff", "The number of elements "
-                                                                    "that can be sorted in RAM.",
-                                   {'c', "cutoff"}, 1000000);
+                                                                    "that can be sorted in RAM. "
+                                                                    "This number can be less than 'count' "
+                                                                    "but cannot be zero."
+                                                                    "The default value is 1e7.",
+                                   {'c', "cutoff"}, 10000000);
     args::ValueFlag<std::string> output(parser, "output", "Path to the output tape. "
                                                            "It either should be correct tape or should be an empty file,"
-                                                           "or should point to the desired location of the output tape.",
+                                                           "or should point to the desired location of the output tape. "
+                                                           "The default value is 'sorted_tape.txt'.",
                                    {'o', "output", "dst"}, "sorted_tape.txt");
     args::ValueFlag<std::string> config(parser, "config", "Path to the file tapes config file or "
-                                                           "to the desired location where to create it.",
+                                                           "to the desired location where to create it. "
+                                                           "The default value is 'file_tape.cfg'.",
                                    {"config", "cfg"}, "file_tape.cfg");
     try {
         parser.ParseCLI(argc, argv);
