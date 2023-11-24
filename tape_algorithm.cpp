@@ -2,9 +2,26 @@
 #include "tape_utils.h"
 
 #include <algorithm>
-#include <cassert>
 
 namespace {
+    /**
+     * Merges two src tapes (which are split into blocks of size `block_size`)
+     * to two dst tapes (which will be split into blocks of size `block_size`*2).
+     * Each block is sorted either ascending or descending
+     * (depending on the current step in the merge sort algorithm).
+     * If src tapes blocks are sorted in ascending order,
+     * then dst blocks will be sorted in descending order, and vice versa.
+     * @param src1 left source tape
+     * @param src2 right source tape
+     * @param dst1 left destination tape
+     * @param dst2 right destination tape
+     * @param n_layers number of layers on src tapes (max number of blocks on either of src tapes); equals total number of blocks on dst tapes
+     * @param last_layer_id last layer ID
+     * @param n_elems number of elements to sort
+     * @param n_blocks total number of blocks on src tapes
+     * @param block_size current (src) size of the blocks
+     * @param cmp_greater used to set the order of elements
+     */
     void merge(basic_tape const* src1, basic_tape const* src2,
                basic_tape* dst1, basic_tape* dst2,
                size_t n_layers, size_t last_layer_id,
@@ -61,14 +78,17 @@ namespace {
     }
 
     /**
-     *
-     * @param n_elems
-     * @param cutoff
+     * Performs iterative merge sort algorithm. Scans src tapes from right to left,
+     * and stores merged sorted blocks to dst tapes from left to right.
+     * The size of blocks is doubled on each step.
+     * The result is stored in reversed order each two iterations of the algorithm.
+     * @param n_elems number of elements to sort
+     * @param cutoff initial size of blocks (already sorted and stored in tape1 and tape2)
      * @param tape1 must point at its last element
      * @param tape2 must point at its last element
      * @param tape3 must point at beginning of the tape
      * @param tape4 must point at beginning of the tape
-     * @return
+     * @return number of iterations of the algorithm
      */
     size_t merge_sort(size_t n_elems, size_t cutoff,
                     basic_tape* tape1, basic_tape* tape2,
@@ -95,6 +115,17 @@ namespace {
         return n_steps;
     }
 
+    /**
+     * Splits the source tape into two tapes as evenly as possible.
+     * Writes to the dst tapes by sorted blocks of size `cutoff`.
+     * The number of elements on the dst1 tape is guaranteed to be not less than
+     * the number of elements on the dst2.
+     * @param src
+     * @param n_elems
+     * @param cutoff
+     * @param dst1
+     * @param dst2
+     */
     void split_tape(basic_tape const& src, size_t n_elems, size_t cutoff,
                     basic_tape* dst1, basic_tape* dst2) {
         size_t n_blocks = (n_elems + cutoff - 1) / cutoff;
