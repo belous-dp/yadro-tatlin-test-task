@@ -17,9 +17,9 @@ namespace {
             out << ", posp=" << fs.tellp() << ", char=" << static_cast<char>(fs.peek());
             out << ", posp=" << fs.tellp();
         } else {
-            out << " -- eofbit=" << ((fs.rdstate() & std::ios::eofbit) > 0)
-                << ", failbit=" << ((fs.rdstate() & std::ios::failbit) > 0)
-                << ", fs.badbit=" << ((fs.rdstate() & std::ios::badbit) > 0);
+            out << " -- eofbit=" << ((fs.rdstate() & std::fstream::eofbit) > 0)
+                << ", failbit=" << ((fs.rdstate() & std::fstream::failbit) > 0)
+                << ", fs.badbit=" << ((fs.rdstate() & std::fstream::badbit) > 0);
         }
         out << std::endl;
         fs.clear();
@@ -50,6 +50,7 @@ file_tape::file_tape(std::string const& filename, size_t size, const std::string
         std::string content(size * (FILL_LEN + 1), ' ');
         file << content << std::endl;
     }
+    file.exceptions(std::fstream::badbit);
     try {
         timings_config config(config_filename);
         timings = config;
@@ -71,7 +72,7 @@ int file_tape::read() const {
     std::this_thread::sleep_for(std::chrono::milliseconds(timings.read));
     int res;
     update_fstream_pos();
-    file >> res; // what if failed? https://cplusplus.com/reference/istream/istream/operator%3E%3E/
+    file >> res;
     return res;
 }
 
@@ -95,7 +96,7 @@ std::optional<int> file_tape::read_safe() const {
 void file_tape::write(int data) {
     std::this_thread::sleep_for(std::chrono::milliseconds(timings.write));
     update_fstream_pos();
-    file << std::setw(FILL_LEN) << data << ' '; // todo error handling
+    file << std::setw(FILL_LEN) << data << ' ';
 }
 
 bool file_tape::move_left() const {
