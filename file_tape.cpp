@@ -30,13 +30,17 @@ namespace {
 const uint8_t file_tape::FILL_LEN = std::to_string(std::numeric_limits<int>::min()).size();
 const std::string file_tape::FILL_S = std::string(FILL_LEN, ' ');
 
-file_tape::file_tape(const std::string& filename, size_t size) : file_tape(filename, size, "file_tape.cfg") {}
-
-file_tape::file_tape(std::string const& filename, size_t size, const std::string& config_filename)
-        : file(filename), pos(0), size(size) {
+file_tape::file_tape(std::string const& filename, size_t size) : pos(0), size(size) {
     if (size == 0) {
         throw std::invalid_argument("size of a tape cannot be zero");
     }
+    if (!std::filesystem::exists(filename)) {
+        std::ofstream created(filename);
+        if (!created) {
+            throw std::runtime_error("cannot create file " + filename);
+        }
+    }
+    file = std::fstream(filename);
     if (!file) {
         throw std::runtime_error("cannot open file " + filename);
     }
@@ -51,6 +55,10 @@ file_tape::file_tape(std::string const& filename, size_t size, const std::string
         file << content << std::endl;
     }
     file.exceptions(std::fstream::badbit);
+}
+
+file_tape::file_tape(const std::string& filename, size_t size, const std::string& config_filename)
+                    : file_tape(filename, size) {
     try {
         timings_config config(config_filename);
         timings = config;

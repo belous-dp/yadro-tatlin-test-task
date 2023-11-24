@@ -8,7 +8,7 @@
 
 
 namespace {
-    std::string create_temp_file() {
+    std::string create_temp_filename() {
         static size_t cnt = 0;
         cnt++;
         std::filesystem::path path("tmp");
@@ -17,11 +17,11 @@ namespace {
         auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
         path /= std::string(test_info->test_suite_name()) + "__" + std::string(test_info->name()) +
                 "__" + std::to_string(cnt) + ".txt";
-        std::ofstream{ path }; // NOLINT(*-unused-raii)
         return path.string();
     }
 
     const uint8_t FILL_LEN = std::to_string(std::numeric_limits<int>::min()).size();
+    const std::string FILE_TAPE_CONFIG_NAME = "file_tape_tests.cfg";
 
     std::string file_tape_content_from_vec(std::vector<int> const& v) {
         std::stringstream ss;
@@ -34,12 +34,12 @@ namespace {
 
     struct file_tape_fixture : testing::Test {
         void SetUp() override {
-            auto filename = create_temp_file();
+            auto filename = create_temp_filename();
             {
                 std::ofstream file(filename);
                 file << "        123         456         789\n";
             }
-            tape = std::make_unique<file_tape>(filename, 3);
+            tape = std::make_unique<file_tape>(filename, 3, FILE_TAPE_CONFIG_NAME);
         }
 
         std::unique_ptr<file_tape> tape;
@@ -48,34 +48,86 @@ namespace {
 
 TEST(file_tape, ctor_no_file) {
     EXPECT_ANY_THROW({
-        file_tape tape("not_existing_file_name", 42);
+        file_tape tape("/not_existing_file_name", 42);
     });
 }
 
-TEST(file_tape, ctor_empty_file) {
-    auto filename = create_temp_file();
+TEST(file_tape, timings_default) {
+    auto filename = create_temp_filename();
+    std::filesystem::remove(FILE_TAPE_CONFIG_NAME);
     {
-        file_tape tape(filename, 2);
+        file_tape tape(filename, 1, FILE_TAPE_CONFIG_NAME);
+    }
+    ASSERT_TRUE(std::filesystem::exists(FILE_TAPE_CONFIG_NAME));
+    file_tape::timings_config timings(FILE_TAPE_CONFIG_NAME);
+    EXPECT_EQ(timings.read, 0);
+    EXPECT_EQ(timings.write, 0);
+    EXPECT_EQ(timings.move_left, 0);
+    EXPECT_EQ(timings.move_right, 0);
+    EXPECT_EQ(timings.rewind, 0);
+}
+
+TEST(file_tape, timings_to_string) {
+    auto config_name = create_temp_filename();
+    std::ofstream config(config_name);
+    config << "r=123  ml=43 mr=1337 rewind=101 r=42" << std::endl;
+    ASSERT_TRUE(std::filesystem::exists(config_name));
+    file_tape::timings_config timings(config_name);
+    EXPECT_EQ(timings.read, 42);
+    EXPECT_EQ(timings.write, 0);
+    EXPECT_EQ(timings.move_left, 43);
+    EXPECT_EQ(timings.move_right, 1337);
+    EXPECT_EQ(timings.rewind, 101);
+    EXPECT_EQ(timings.to_string(), "read=42 write=0 move_left=43 move_right=1337 rewind=101");
+    auto new_config_name = create_temp_filename();
+    std::ofstream new_config(new_config_name);
+    new_config << timings.to_string() << std::endl;
+    ASSERT_TRUE(std::filesystem::exists(new_config_name));
+    file_tape::timings_config new_timings(config_name);
+    EXPECT_EQ(new_timings.read, 42);
+    EXPECT_EQ(new_timings.write, 0);
+    EXPECT_EQ(new_timings.move_left, 43);
+    EXPECT_EQ(new_timings.move_right, 1337);
+    EXPECT_EQ(new_timings.rewind, 101);
+    EXPECT_EQ(new_timings.to_string(), "read=42 write=0 move_left=43 move_right=1337 rewind=101");
+}
+
+TEST(file_tape, ctor_empty_file) {
+    auto filename = create_temp_filename();
+    {
+        file_tape tape(filename, 2, FILE_TAPE_CONFIG_NAME);
     }
     std::ifstream file(filename);
     std::string line;
     std::getline(file, line);
-    ASSERT_EQ(line, "                        ");
+    EXPECT_EQ(line, "                        ");
+}
+
+TEST(file_tape, ctor_created_empty) {
+    std::string not_existing = "not_existing_file_name";
+    std::filesystem::remove(not_existing);
+    ASSERT_FALSE(std::filesystem::exists(not_existing));
+    file_tape tape(not_existing, 42);
+    ASSERT_TRUE(std::filesystem::exists(not_existing));
+    std::ifstream file(not_existing);
+    std::string content;
+    std::getline(file, content);
+    EXPECT_EQ(content, std::string((FILL_LEN + 1) * 42, ' '));
 }
 
 TEST(file_tape, ctor_partially_filled_file) {
-    auto filename = create_temp_file();
+    auto filename = create_temp_filename();
     {
         std::ofstream file(filename);
         file << "                     42            \n";
     }
     {
-        file_tape tape(filename, 3);
+        file_tape tape(filename, 3, FILE_TAPE_CONFIG_NAME);
     }
     std::ifstream file(filename);
     std::string line;
     std::getline(file, line);
-    ASSERT_EQ(line, "                     42            ");
+    EXPECT_EQ(line, "                     42            ");
 }
 
 TEST_F(file_tape_fixture, read_one) {
@@ -106,7 +158,7 @@ TEST_F(file_tape_fixture, move_right_too_much) {
 }
 
 TEST(file_tape, move_right_not_filled) {
-    file_tape tape(create_temp_file(), 3);
+    file_tape tape(create_temp_filename(), 3, FILE_TAPE_CONFIG_NAME);
     EXPECT_TRUE(tape.move_right());
     EXPECT_TRUE(tape.move_right());
     EXPECT_FALSE(tape.move_right());
@@ -125,7 +177,7 @@ TEST_F(file_tape_fixture, read_many) {
 }
 
 TEST(file_tape, read_not_filled) {
-    file_tape tape(create_temp_file(), 3);
+    file_tape tape(create_temp_filename(), 3, FILE_TAPE_CONFIG_NAME);
     EXPECT_FALSE(tape.read_safe().has_value());
     tape.move_right();
     EXPECT_FALSE(tape.read_safe().has_value());
@@ -134,12 +186,12 @@ TEST(file_tape, read_not_filled) {
 }
 
 TEST(file_tape, read_partially_filled) {
-    auto filename = create_temp_file();
+    auto filename = create_temp_filename();
     {
         std::ofstream file(filename);
         file << "                     42            \n";
     }
-    file_tape tape(filename, 3);
+    file_tape tape(filename, 3, FILE_TAPE_CONFIG_NAME);
     EXPECT_FALSE(tape.read_safe().has_value());
     tape.move_right();
     ASSERT_TRUE(tape.read_safe().has_value());
@@ -168,7 +220,7 @@ TEST_F(file_tape_fixture, move_left_many) {
 }
 
 TEST(file_tape, move_left_not_filled) {
-    file_tape tape(create_temp_file(), 3);
+    file_tape tape(create_temp_filename(), 3, FILE_TAPE_CONFIG_NAME);
     tape.move_right();
     tape.move_right();
     EXPECT_TRUE(tape.move_left());
@@ -195,13 +247,13 @@ TEST_F(file_tape_fixture, write_no_affects_others) {
 }
 
 TEST(file_tape, write_partially_filled) {
-    auto filename = create_temp_file();
+    auto filename = create_temp_filename();
     {
         std::ofstream file(filename);
         file << "                     42            \n";
     }
     {
-        file_tape tape(filename, 3);
+        file_tape tape(filename, 3, FILE_TAPE_CONFIG_NAME);
         tape.write(0);
         ASSERT_TRUE(tape.read_safe().has_value());
         EXPECT_EQ(tape.read_safe().value(), 0);
@@ -223,14 +275,14 @@ TEST(file_tape, write_partially_filled) {
 }
 
 TEST(file_tape, write_int_min) {
-    auto filename = create_temp_file();
+    auto filename = create_temp_filename();
     {
         std::ofstream file(filename);
         file << "                     42            \n";
     }
     const int int_min = std::numeric_limits<int>::min();
     {
-        file_tape tape(filename, 3);
+        file_tape tape(filename, 3, FILE_TAPE_CONFIG_NAME);
         tape.write(int_min);
         ASSERT_TRUE(tape.read_safe().has_value());
         EXPECT_EQ(tape.read_safe().value(), int_min);
@@ -250,14 +302,14 @@ TEST(file_tape, write_int_min) {
 }
 
 TEST(file_tape, big) {
-    auto filename = create_temp_file();
+    auto filename = create_temp_filename();
     {
         std::ofstream file(filename);
         file << "                     42                                            1337                                     \n";
     }
     {
         size_t size = 9;
-        file_tape tape(filename, size);
+        file_tape tape(filename, size, FILE_TAPE_CONFIG_NAME);
         ASSERT_FALSE(tape.read_safe().has_value());
         ASSERT_TRUE(tape.move_right());
         ASSERT_TRUE(tape.read_safe().has_value());
@@ -342,16 +394,16 @@ TEST_F(file_tape_fixture, rewind) {
 
 namespace {
     void test_sorted(std::vector<int> content, size_t cutoff) {
-        auto src_filename = create_temp_file();
+        auto src_filename = create_temp_filename();
         {
             std::ofstream file(src_filename);
             file << file_tape_content_from_vec(content) << '\n';
         }
-        auto dst_filename = create_temp_file();
+        auto dst_filename = create_temp_filename();
         {
             auto size = content.size();
-            file_tape src(src_filename, size);
-            file_tape dst(dst_filename, size);
+            file_tape src(src_filename, size, FILE_TAPE_CONFIG_NAME);
+            file_tape dst(dst_filename, size, FILE_TAPE_CONFIG_NAME);
             sort(src, size, dst, cutoff, create_temp_file_tape);
         }
         std::sort(content.begin(), content.end());
