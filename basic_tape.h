@@ -1,6 +1,8 @@
 #ifndef YADRO_TATLIN_TEST_TASK_BASIC_TAPE_H
 #define YADRO_TATLIN_TEST_TASK_BASIC_TAPE_H
 
+#include <functional>
+#include <memory>
 #include <optional>
 
 // const basic_tape == read-only
@@ -16,5 +18,6 @@ struct basic_tape {
     }
 };
 
+using tape_factory = std::function<std::unique_ptr<basic_tape>(size_t)>;
 
 #endif //YADRO_TATLIN_TEST_TASK_BASIC_TAPE_H

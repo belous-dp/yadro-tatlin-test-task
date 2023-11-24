@@ -404,7 +404,7 @@ namespace {
             auto size = content.size();
             file_tape src(src_filename, size, FILE_TAPE_CONFIG_NAME);
             file_tape dst(dst_filename, size, FILE_TAPE_CONFIG_NAME);
-            sort(src, size, dst, cutoff, create_temp_file_tape);
+            sort(src, size, dst, cutoff, create_file_tape_factory(FILE_TAPE_CONFIG_NAME));
         }
         std::sort(content.begin(), content.end());
         std::ifstream file(dst_filename);

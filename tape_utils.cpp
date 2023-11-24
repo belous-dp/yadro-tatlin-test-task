@@ -14,14 +14,16 @@ void bulk_write(std::vector<int> const& data, basic_tape& tape) {
     }
 }
 
-std::unique_ptr<basic_tape> create_temp_file_tape(size_t size) {
-    static size_t cnt = 0;
-    cnt++;
-    std::filesystem::path path("tmp");
-    std::filesystem::create_directory(path);
-    path /= "tape" + std::to_string(cnt) + ".txt";
-    std::ofstream{path};
-    return std::make_unique<file_tape>(path.string(), size);
+tape_factory create_file_tape_factory(std::string const& path_to_config) {
+    auto factory = [&](size_t size) {
+        static size_t cnt = 0;
+        cnt++;
+        std::filesystem::path path("tmp");
+        std::filesystem::create_directory(path);
+        path /= "tape" + std::to_string(cnt) + ".txt";
+        return std::make_unique<file_tape>(path.string(), size, path_to_config);
+    };
+    return factory;
 }
 
 std::unique_ptr<basic_tape> create_temp_vector_tape(size_t size) {

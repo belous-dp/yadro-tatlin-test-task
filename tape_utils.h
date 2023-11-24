@@ -3,12 +3,11 @@
 
 #include "basic_tape.h"
 
-#include <memory>
 #include <vector>
 
 void bulk_write(std::vector<int> const& data, basic_tape& tape);
 
-std::unique_ptr<basic_tape> create_temp_file_tape(size_t size);
+tape_factory create_file_tape_factory(std::string const& path_to_config);
 
 std::unique_ptr<basic_tape> create_temp_vector_tape(size_t size);
 
