@@ -5,7 +5,6 @@
 #include <args.hxx>
 #include <filesystem>
 #include <iostream>
-#include <cassert>
 
 
 int main(int argc, char* argv[]) {
@@ -18,7 +17,7 @@ int main(int argc, char* argv[]) {
     args::Positional<size_t> size(parser, "count", "Number of elements to sort.",
                                   args::Options::Required);
     args::ValueFlag<size_t> cutoff(parser, "cutoff", "The number of elements "
-                                                                    "that fit into the \"computer\"'s memory.",
+                                                                    "that can be sorted in RAM.",
                                    {'c', "cutoff"}, 1000000);
     args::ValueFlag<std::string> output(parser, "output", "Path to the output tape. "
                                                            "It either should be correct tape or should be an empty file,"
@@ -30,6 +29,14 @@ int main(int argc, char* argv[]) {
     try {
         parser.ParseCLI(argc, argv);
         size_t sz = args::get(size);
+        if (sz == 0) {
+            std::cout << "number of elements cannot be zero";
+            return 1;
+        }
+        if (args::get(cutoff) == 0) {
+            std::cout << "number of elements which sorted in RAM cannot be zero";
+            return 1;
+        }
         std::string cfg = args::get(config);
         file_tape src(args::get(input), sz, cfg);
         file_tape dst(args::get(output), sz, cfg);
@@ -39,10 +46,15 @@ int main(int argc, char* argv[]) {
         }
     } catch (args::Help&) {
         std::cout << parser;
-        return 0;
     } catch (args::Error& e) {
         std::cerr << e.what() << std::endl;
         std::cerr << parser;
+        return 1;
+    } catch (std::ios_base::failure& e) {
+        std::cout << "I/O error occurred while working with the tapes: " << e.what() << std::endl;
+        return 1;
+    } catch (std::runtime_error& e) {
+        std::cout << "An error occurred while working with the tapes: " << e.what() << std::endl;
         return 1;
     }
 }

@@ -41,5 +41,5 @@ void print_tape(const basic_tape &tape, std::ostream& out) {
             out << "_ ";
         }
     } while (tape.move_right());
-    out << " }" << std::endl;
+    out << "}" << std::endl;
 }

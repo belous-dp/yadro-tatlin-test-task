@@ -117,8 +117,13 @@ namespace {
     }
 }
 
-void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff, tape_factory factory) {
-    assert(cutoff > 0 && count > 0);
+void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff, tape_factory const& factory) {
+    if (count == 0) {
+        return;
+    }
+    if (cutoff == 0) {
+        throw std::invalid_argument("cutoff must be positive integer");
+    }
 
     auto tt1 = factory(count);
     auto tt2 = factory(count);
