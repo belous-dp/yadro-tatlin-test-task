@@ -11,6 +11,6 @@ int main() {
     file_tape src("src.txt", n);
     std::ofstream{"dst.txt"};
     file_tape dst("dst.txt", n);
-    sort(src, n, dst, 3);
+    sort(src, n, dst, 3, create_temp_file_tape);
     print_tape(dst, std::cout);
 }
