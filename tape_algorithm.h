@@ -8,7 +8,7 @@
  * @param src source (input) tape. It must points to the first element from which to start sorting numbers.
  * @param count number of elements to sort.
  * @param dst destination tape. It must points to the first element from which to start writing numbers.
- * @param cutoff number of elements that can be sorted in RAM.
+ * @param cutoff number of elements that can be sorted in RAM. Cannot be zero.
  * @param factory function to create temporary tapes.
  */
 void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff, tape_factory const& factory);

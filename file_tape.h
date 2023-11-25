@@ -17,7 +17,7 @@
  * then the number is written.
  * The elements are separated by whitespace.
  * Empty elements are allowed (stored as 11 whitespaces).
- * For emulate delays in IO operations, timings from timings_config class are used.
+ * To simulate delays in IO operations, timings from timings_config class are used.
  */
 class file_tape : public basic_tape {
 public:
@@ -34,8 +34,10 @@ public:
          * Allowed format: 'r' or "read" for read timing, 'w' or "write" for write timing,
          * "ml" or "move_left" for move_left timing, "mr" or "move_right" for move_right timing,
          * "rewind" for "rewind" timing.
+         * Timings are measured in milliseconds.
          * Field name must be followed by '=' and field value.
-         * Example: "mr=1337 r=123  move_left=42 rewind=101" (without quotes).
+         * Optionally, the value can be followed by 'ms' suffix.
+         * Example: "mr=1337 r=123  move_left=42ms rewind=101" (without quotes).
          * Result: { .read=123, .write=0, .move_left=42, .move_right=1337, .rewind=101 }.
          * @param filename path to the config file
          */
@@ -49,8 +51,8 @@ public:
      * 2. it can be empty, in that case the file is filled (pre-allocated) with required number of whitespaces;
      * 3. it can yet not exists, in that case an attempt to create the file is being made, then see case 2.
      * Default timings are used.
-     * @param filename path to the file where to store data
-     * @param size number of elements of the tape
+     * @param filename path to the file where to store data.
+     * @param size number of elements of the tape. Cannot be zero.
      */
     file_tape(std::string const& filename, size_t size);
 
@@ -60,9 +62,9 @@ public:
      * 2. it can be empty, in that case the file is filled (pre-allocated) with required number of whitespaces;
      * 3. it can yet not exists, in that case an attempt to create the file is being made, then see case 2.
      * Attempts to parse timings from `config_filename` path. See timings_config::timings_config(std::string const&).
-     * @param filename path to the file where to store data
-     * @param size number of elements of the tape
-     * @param config_filename path to the timings configuration file
+     * @param filename path to the file where to store data.
+     * @param size number of elements of the tape. Cannot be zero.
+     * @param config_filename path to the timings configuration file.
      */
     file_tape(std::string const& filename, size_t size, std::string const& config_filename);
 
