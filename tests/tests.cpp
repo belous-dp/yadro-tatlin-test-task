@@ -60,11 +60,11 @@ TEST(file_tape, timings_default) {
     }
     ASSERT_TRUE(std::filesystem::exists(FILE_TAPE_CONFIG_NAME));
     file_tape::timings_config timings(FILE_TAPE_CONFIG_NAME);
-    EXPECT_EQ(timings.read, 0);
-    EXPECT_EQ(timings.write, 0);
-    EXPECT_EQ(timings.move_left, 0);
-    EXPECT_EQ(timings.move_right, 0);
-    EXPECT_EQ(timings.rewind, 0);
+    EXPECT_EQ(timings.read, std::chrono::milliseconds{0});
+    EXPECT_EQ(timings.write, std::chrono::milliseconds{0});
+    EXPECT_EQ(timings.move_left, std::chrono::milliseconds{0});
+    EXPECT_EQ(timings.move_right, std::chrono::milliseconds{0});
+    EXPECT_EQ(timings.rewind, std::chrono::milliseconds{0});
 }
 
 TEST(file_tape, timings_to_string) {
@@ -73,23 +73,23 @@ TEST(file_tape, timings_to_string) {
     config << "r=123  ml=43 mr=1337 rewind=101 r=42" << std::endl;
     ASSERT_TRUE(std::filesystem::exists(config_name));
     file_tape::timings_config timings(config_name);
-    EXPECT_EQ(timings.read, 42);
-    EXPECT_EQ(timings.write, 0);
-    EXPECT_EQ(timings.move_left, 43);
-    EXPECT_EQ(timings.move_right, 1337);
-    EXPECT_EQ(timings.rewind, 101);
-    EXPECT_EQ(timings.to_string(), "read=42 write=0 move_left=43 move_right=1337 rewind=101");
+    EXPECT_EQ(timings.read, std::chrono::milliseconds{42});
+    EXPECT_EQ(timings.write, std::chrono::milliseconds{0});
+    EXPECT_EQ(timings.move_left, std::chrono::milliseconds{43});
+    EXPECT_EQ(timings.move_right, std::chrono::milliseconds{1337});
+    EXPECT_EQ(timings.rewind, std::chrono::milliseconds{101});
+    EXPECT_EQ(timings.to_string(), "read=42ms write=0ms move_left=43ms move_right=1337ms rewind=101ms");
     auto new_config_name = create_temp_filename();
     std::ofstream new_config(new_config_name);
     new_config << timings.to_string() << std::endl;
     ASSERT_TRUE(std::filesystem::exists(new_config_name));
     file_tape::timings_config new_timings(config_name);
-    EXPECT_EQ(new_timings.read, 42);
-    EXPECT_EQ(new_timings.write, 0);
-    EXPECT_EQ(new_timings.move_left, 43);
-    EXPECT_EQ(new_timings.move_right, 1337);
-    EXPECT_EQ(new_timings.rewind, 101);
-    EXPECT_EQ(new_timings.to_string(), "read=42 write=0 move_left=43 move_right=1337 rewind=101");
+    EXPECT_EQ(new_timings.read, std::chrono::milliseconds{42});
+    EXPECT_EQ(new_timings.write, std::chrono::milliseconds{0});
+    EXPECT_EQ(new_timings.move_left, std::chrono::milliseconds{43});
+    EXPECT_EQ(new_timings.move_right, std::chrono::milliseconds{1337});
+    EXPECT_EQ(new_timings.rewind, std::chrono::milliseconds{101});
+    EXPECT_EQ(new_timings.to_string(), "read=42ms write=0ms move_left=43ms move_right=1337ms rewind=101ms");
 }
 
 TEST(file_tape, ctor_empty_file) {

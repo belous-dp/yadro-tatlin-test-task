@@ -6,7 +6,7 @@
 namespace {
     /**
      * Merges two src tapes (which are split into blocks of size `block_size`)
-     * to two dst tapes (which will be split into blocks of size `block_size`*2).
+     * to two dst tapes (which will be split into blocks of size `block_size*2`).
      * Each block is sorted either ascending or descending
      * (depending on the current step in the merge sort algorithm).
      * If src tapes blocks are sorted in ascending order,
@@ -30,16 +30,16 @@ namespace {
         for (size_t i = 0; i < n_layers; ++i) {
             size_t left_block_size, right_block_size;
             if (i == last_layer_id) {
-                size_t last = n_elems % block_size;
-                if (last == 0) {
-                    last = block_size;
+                auto last_block_size = n_elems % block_size;
+                if (last_block_size == 0) {
+                    last_block_size = block_size;
                 }
                 if (n_blocks % 2) {
-                    left_block_size = last;
+                    left_block_size = last_block_size;
                     right_block_size = 0;
                 } else {
                     left_block_size = block_size;
-                    right_block_size = last;
+                    right_block_size = last_block_size;
                 }
             } else {
                 left_block_size = right_block_size = block_size;
@@ -56,8 +56,8 @@ namespace {
                     src1->move_left();
                     left++;
                 } else {
-                    int e1 = src1->read();
-                    int e2 = src2->read();
+                    auto e1 = src1->read();
+                    auto e2 = src2->read();
                     if ((e1 < e2) ^ cmp_greater) {
                         dst1->write(e1);
                         src1->move_left();
@@ -94,17 +94,17 @@ namespace {
                     basic_tape* tape1, basic_tape* tape2,
                     basic_tape* tape3, basic_tape* tape4) {
 
-        size_t n_steps = 1;
-        size_t block_size = cutoff;
-        size_t n_blocks = (n_elems + cutoff - 1) / cutoff;
+        auto n_steps = 1;
+        auto block_size = cutoff;
+        auto n_blocks = (n_elems + cutoff - 1) / cutoff;
         while (block_size < n_elems) { // log(n) merges
 
-            size_t n_layers = (n_blocks + 1) / 2; // also equals n_blocks on the next step
+            auto n_layers = (n_blocks + 1) / 2; // also equals n_blocks on the next step
             bool first_write_to_tape3 = n_layers % 2 || (n_steps % 2 == 0);
             merge(tape1, tape2,
                   (first_write_to_tape3 ? tape3 : tape4), (first_write_to_tape3 ? tape4 : tape3),
-                  n_layers, (n_steps % 2 ? 0 : n_layers - 1), n_elems, n_blocks, block_size,
-                  static_cast<int>(n_steps) % 2);
+                  n_layers, (n_steps % 2 ? 0 : n_layers - 1),
+                  n_elems, n_blocks, block_size, n_steps % 2);
 
             std::swap(tape1, tape3);
             std::swap(tape2, tape4);
@@ -128,18 +128,18 @@ namespace {
      */
     void split_tape(basic_tape const& src, size_t n_elems, size_t cutoff,
                     basic_tape* dst1, basic_tape* dst2) {
-        size_t n_blocks = (n_elems + cutoff - 1) / cutoff;
-        std::vector<int> mem(cutoff);
+        auto n_blocks = (n_elems + cutoff - 1) / cutoff;
+        auto block_in_ram = std::vector<int>(cutoff);
         for (size_t i = 0, nb = 0; i < n_elems; i += cutoff, ++nb) {
             for (size_t j = 0; j < cutoff && i + j < n_elems; ++j) {
-                mem[j] = src.read();
+                block_in_ram[j] = src.read();
                 src.move_right();
             }
             if (i + cutoff >= n_elems) {
-                mem.resize(n_elems - i);
+                block_in_ram.resize(n_elems - i);
             }
-            std::sort(mem.begin(), mem.end());
-            bulk_write(mem, *dst1);
+            std::sort(block_in_ram.begin(), block_in_ram.end());
+            bulk_write(block_in_ram, *dst1);
             if (nb + 2 < n_blocks) {
                 dst1->move_right();
             }
@@ -161,7 +161,7 @@ void sort(basic_tape const& src, size_t count, basic_tape& dst, size_t cutoff, t
     auto tt3 = factory(count);
 
     split_tape(src, count, cutoff, &dst, tt1.get());
-    size_t n_steps = merge_sort(count, cutoff, &dst, tt1.get(), tt2.get(), tt3.get());
+    auto n_steps = merge_sort(count, cutoff, &dst, tt1.get(), tt2.get(), tt3.get());
     if (n_steps % 2 == 0) {
         // sorted data is stored in tt2 but reversed
         for (size_t i = 0; i < count; ++i) {

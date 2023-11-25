@@ -5,6 +5,7 @@
 
 #include <string>
 #include <fstream>
+#include <chrono>
 
 /**
  * This class emulates a tape by interacting with a text file.
@@ -21,11 +22,11 @@
 class file_tape : public basic_tape {
 public:
     struct timings_config {
-        uint32_t read = 0;
-        uint32_t write = 0;
-        uint32_t move_left = 0;
-        uint32_t move_right = 0;
-        uint32_t rewind = 0;
+        std::chrono::milliseconds read{0};
+        std::chrono::milliseconds write{0};
+        std::chrono::milliseconds move_left{0};
+        std::chrono::milliseconds move_right{0};
+        std::chrono::milliseconds rewind{0};
 
         timings_config() = default;
         /**
@@ -84,7 +85,7 @@ private:
     mutable std::fstream file;
     mutable size_t pos;
     const size_t size;
-    mutable timings_config timings;
+    timings_config timings;
 };
 
 

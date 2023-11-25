@@ -44,8 +44,8 @@ file_tape::file_tape(std::string const& filename, size_t size) : pos(0), size(si
     if (!file) {
         throw std::runtime_error("cannot open file " + filename);
     }
-    size_t expected_size = size * (FILL_LEN + 1) - 1;
-    size_t file_size = std::filesystem::file_size(filename);
+    auto expected_size = size * (FILL_LEN + 1) - 1;
+    auto file_size = std::filesystem::file_size(filename);
     if (file_size < expected_size) {
         if (file_size != 0) {
             throw std::runtime_error("the file must either be empty "
@@ -57,7 +57,7 @@ file_tape::file_tape(std::string const& filename, size_t size) : pos(0), size(si
     file.exceptions(std::fstream::badbit);
 }
 
-file_tape::file_tape(const std::string& filename, size_t size, const std::string& config_filename)
+file_tape::file_tape(std::string const& filename, size_t size, std::string const& config_filename)
                     : file_tape(filename, size) {
     try {
         timings_config config(config_filename);
@@ -71,13 +71,13 @@ file_tape::file_tape(const std::string& filename, size_t size, const std::string
 }
 
 void file_tape::update_fstream_pos() const {
-    auto spos = static_cast<std::streamoff>(pos) * (FILL_LEN + 1);
+    auto spos = static_cast<std::streamoff>(pos * (FILL_LEN + 1));
     file.seekg(spos);
     file.seekp(spos);
 }
 
 int file_tape::read() const {
-    std::this_thread::sleep_for(std::chrono::milliseconds(timings.read));
+    std::this_thread::sleep_for(timings.read);
     int res;
     update_fstream_pos();
     file >> res;
@@ -85,13 +85,13 @@ int file_tape::read() const {
 }
 
 std::optional<int> file_tape::read_safe() const {
-    std::this_thread::sleep_for(std::chrono::milliseconds(timings.read));
+    std::this_thread::sleep_for(timings.read);
     char buf[FILL_LEN];
     update_fstream_pos();
     file.read(buf, FILL_LEN);
     std::string s(buf, FILL_LEN);
     try {
-        int res = std::stoi(s);
+        auto res = std::stoi(s);
         return { res };
     } catch (std::exception& e) {
         if (s != FILL_S) {
@@ -102,7 +102,7 @@ std::optional<int> file_tape::read_safe() const {
 }
 
 void file_tape::write(int data) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(timings.write));
+    std::this_thread::sleep_for(timings.write);
     update_fstream_pos();
     file << std::setw(FILL_LEN) << data << ' ';
 }
@@ -111,7 +111,7 @@ bool file_tape::move_left() const {
     if (pos == 0) {
         return false;
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(timings.move_left));
+    std::this_thread::sleep_for(timings.move_left);
     pos--;
     return true;
 }
@@ -120,20 +120,20 @@ bool file_tape::move_right() const {
     if (pos + 1 == size) {
         return false;
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(timings.move_right));
+    std::this_thread::sleep_for(timings.move_right);
     pos++;
     return true;
 }
 
 void file_tape::rewind() const {
-    std::this_thread::sleep_for(std::chrono::milliseconds(timings.rewind));
+    std::this_thread::sleep_for(timings.rewind);
     pos = 0;
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 
-file_tape::timings_config::timings_config(const std::string& filename) {
+file_tape::timings_config::timings_config(std::string const& filename) {
     std::ifstream file(filename);
     if (!file) {
         throw std::runtime_error("cannot open config file " + filename);
@@ -147,7 +147,7 @@ file_tape::timings_config::timings_config(const std::string& filename) {
 
         auto field = std::string_view(entry.begin(), entry.begin() + pos);  // NOLINT(*-narrowing-conversions)
         try {
-            auto value = std::stoul(entry.substr(pos + 1));
+            auto value = std::chrono::milliseconds{std::stoull(entry.substr(pos + 1))};
             if (field == "rewind") {
                 rewind = value;
             } else if (field.starts_with('r')) {

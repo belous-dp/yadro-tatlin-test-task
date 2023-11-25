@@ -3,7 +3,6 @@
 #include "tape_utils.h"
 
 #include <args.hxx>
-#include <filesystem>
 #include <iostream>
 
 
@@ -33,19 +32,20 @@ int main(int argc, char* argv[]) {
                                    {"config", "cfg"}, "file_tape.cfg");
     try {
         parser.ParseCLI(argc, argv);
-        size_t sz = args::get(size);
+        auto sz = args::get(size);
         if (sz == 0) {
-            std::cout << "number of elements cannot be zero";
+            std::cout << "Number of elements cannot be zero.";
             return 1;
         }
-        if (args::get(cutoff) == 0) {
-            std::cout << "number of elements which sorted in RAM cannot be zero";
+        auto ctff = args::get(cutoff);
+        if (ctff == 0) {
+            std::cout << "Number of elements which can be sorted in RAM cannot be zero.";
             return 1;
         }
-        std::string cfg = args::get(config);
+        auto cfg = args::get(config);
         file_tape src(args::get(input), sz, cfg);
         file_tape dst(args::get(output), sz, cfg);
-        sort(src, sz, dst, args::get(cutoff), create_file_tape_factory(cfg));
+        sort(src, sz, dst, ctff, create_file_tape_factory(cfg));
         if (print) {
             print_tape(dst, std::cout);
         }

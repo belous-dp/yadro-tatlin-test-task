@@ -26,7 +26,7 @@ tape_factory create_file_tape_factory(std::string const& path_to_config) {
     return factory;
 }
 
-std::unique_ptr<basic_tape> create_temp_vector_tape(size_t size) {
+std::unique_ptr<vector_tape> create_temp_vector_tape(size_t size) {
     return std::make_unique<vector_tape>(size);
 }
 
